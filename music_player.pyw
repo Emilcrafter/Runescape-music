@@ -5,7 +5,7 @@ from random import randrange
 pygame.init()
 clock = pygame.time.Clock()
 # fonts
-font1 = pygame.font.Font('./fonts/RuneScape-Plain-11.ttf', 11)
+font1 = pygame.font.Font('./fonts/RuneScape-Plain-11.ttf', 15)
 font2 = pygame.font.Font('./fonts/RuneScape-Plain-12.ttf', 15)
 # colors
 WHITE = (255, 255, 255)
@@ -17,6 +17,7 @@ size = [236, 262]
 SONGEND = pygame.constants.USEREVENT
 screen = pygame.display.set_mode(size)
 screen.fill(WHITE)
+icon = pygame.image.load('./pics/Icon.png')
 manon = pygame.image.load('./pics/Man2.png')
 manoff = pygame.image.load('./pics/Man1.png')
 autoon = pygame.image.load('./pics/Auto2.png')
@@ -30,6 +31,8 @@ cover = pygame.image.load('./pics/Cover.png')
 cover2 = pygame.image.load('./pics/Cover2.png')
 scrollbar = pygame.image.load('./pics/Scrollbar.png')
 scroller = pygame.image.load('./pics/Scroller.png')
+pygame.display.set_icon(icon)
+pygame.display.set_caption('Runescape Music')
 # Here's the music list
 songs = glob.glob('./songs/*.ogg')
 
@@ -50,12 +53,13 @@ class bigones:
     recent = 1
     song = "AUTO"
     stored = None
+    f = None
 # loop for rendering
 
 
 done = False
 while not done:
-    clock.tick(20)
+    clock.tick(60)
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
     if (click[0] == 0):
@@ -78,12 +82,17 @@ while not done:
     screen.blit(pillar, (210, 0))
     screen.blit(frame, (25, 53))
     screen.blit(scrollbar, (189, 59))
-
+    def textbox(text, x, y, font, sl = False, Color = GREEN):
+        textst = font.render(str(text), False, (Color))
+        textsh = font.render(str(text), False, (BLACK))
+        textsl = font.render(str(text), False, (WHITE))
+        screen.blit(textsh, (x + 1, y + 1))
+        if sl:
+            screen.blit(textsl, (x, y))
+        else:
+            screen.blit(textst, (x, y))
     def songstatus(text):
-        textst = font2.render(str(text), False, (GREEN))
-        textsh = font2.render(str(text), False, (BLACK))
-        screen.blit(textsh, (33, 35))
-        screen.blit(textst, (32, 34))
+           textbox(text, 32, 34, font2, False)
         # 87,8 auto, 129,8 manual 171,8 loop
 
     def bigbuttons(img1, img2, x, y, n):
@@ -122,15 +131,10 @@ while not done:
             c = (62 + (15 * i) - a)
             d = (62 + (15 * (i - 1)) - a)
             e = (c > mouse[1] > d)
-            f = len(songs[i])
-            textst = font2.render(str(songs[i][8:f-4]), False, (GREEN))
-            textsl = font2.render(str(songs[i][8:f-4]), False, (WHITE))
-            textsh = font2.render(str(songs[i][8:f-4]), False, (BLACK))
+            bigones.f = len(songs[i])
             # 37, 61
             if (b and e) and (39 < d < 240):
-                screen.blit(textsh, (38, d + 1))
-                screen.blit(textsl, (37, d))
-                
+                textbox(str(songs[i][8:bigones.f-4]), 37, d, font2, True)
                 if click[0] and not mous.clicked:
                     pygame.mixer.quit()
                     pygame.mixer.init()
@@ -144,25 +148,25 @@ while not done:
                         chan.fadeout(2000)
                         chan.play(tune, 0, 0, 2000)
                         bigones.stored = songs[i]
-                        bigones.song = songs[i][8:f-4]
+                        bigones.song = songs[i][8:bigones.f-4]
                         chan.set_endevent(pygame.constants.USEREVENT)
                     else:
                         chan.play(tune, 0, 0, 2000)
                         bigones.stored = songs[i]
-                        bigones.song = songs[i][8:f-4]
+                        bigones.song = songs[i][8:bigones.f-4]
                         chan.set_endevent(pygame.constants.USEREVENT)
                     chan.set_volume(1.0)
+                    bigones.man = True
+                    bigones.auto = False
+                    bigones.recent = 2
             elif (39 < d < 240):
-                screen.blit(textsh, (38, d + 1))
-                screen.blit(textst, (37, d))
-            screen.blit(cover, (26, 33))
-            screen.blit(cover2, (31, 242))
+                textbox(str(songs[i][8:bigones.f-4]), 37, d, font2, False)
             # 191, 74 146
-    textst = font2.render(str('Playing:'), False, (GOLD))
-    textsh = font2.render(str('Playing:'), False, (BLACK))
-    screen.blit(textsh, (33, 18))
-    screen.blit(textst, (32, 17))
-    
+    textbox('Playing:', 32, 17, font2, False, GOLD)
+    #textst = font2.render(str('Playing:'), False, (GOLD))
+    #textsh = font2.render(str('Playing:'), False, (BLACK))
+    #screen.blit(textsh, (33, 18))
+    #screen.blit(textst, (32, 17))
     def scrollbox():
         a = 71 + (mous.scroll/15 + 15) * 146 / (len(songs))
         screen.blit(scroller, (190, a))
@@ -206,8 +210,9 @@ while not done:
             
         elif  (mous.useraction < 5)and (bigones.auto):
             i = randrange(0, len(songs)-1)
+            bigones.f = len(songs[i])
             tune = pygame.mixer.Sound(songs[i])
-            bigones.song = songs[i][8:f-4]
+            bigones.song = songs[i][8:bigones.f-4]
             pygame.mixer.Channel(1).set_endevent()
             pygame.mixer.Channel(1).play(tune, 0, 0, 2000)
             pygame.mixer.Channel(1).set_endevent(pygame.constants.USEREVENT)
@@ -217,10 +222,15 @@ while not done:
     scrollbox()
     # print(mous.scroll / len(songs))
     smallbuttons()
+    screen.blit(cover, (26, 33))
+    screen.blit(cover2, (31, 242))
+    #96, 251
     songstatus(bigones.song)
+    textbox((str(len(songs))) + " / " + (str(len(songs))), 96, 251, font1, False, GOLD)
     bigbuttons(autooff, autoon, 87, 8, 1)
     bigbuttons(manoff, manon, 129, 8, 2)
     bigbuttons(loopoff, loopon, 171, 8, 3)
+
     pygame.display.flip()
     
 pygame.quit()
